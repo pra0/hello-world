@@ -1,10 +1,158 @@
-﻿@page
+@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Calculator";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="text-center mb-4">
+                <h1 class="display-4">Online Calculator</h1>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <p class="lead">Welcome back, @User.Identity.Name!</p>
+                }
+                else
+                {
+                    <p class="lead">
+                        <a asp-page="/Account/Login" class="btn btn-outline-primary btn-sm me-2">Login</a>
+                        <a asp-page="/Account/Register" class="btn btn-outline-success btn-sm">Register</a>
+                        to save your calculation history
+                    </p>
+                }
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Calculator</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" id="calculatorForm">
+                                <div class="mb-3">
+                                    <input asp-for="Expression" class="form-control form-control-lg text-end" 
+                                           id="display" placeholder="Enter calculation..." readonly />
+                                    <span asp-validation-for="Expression" class="text-danger"></span>
+                                </div>
+                                
+                                @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                                {
+                                    <div class="alert alert-danger">@Model.ErrorMessage</div>
+                                }
+                                
+                                @if (Model.Result.HasValue)
+                                {
+                                    <div class="alert alert-success">
+                                        <strong>Result:</strong> @Model.Expression = @Model.Result.Value
+                                    </div>
+                                }
+
+                                <div class="calculator-grid">
+                                    <button type="button" class="btn btn-secondary" onclick="clearDisplay()">C</button>
+                                    <button type="button" class="btn btn-secondary" onclick="clearEntry()">CE</button>
+                                    <button type="button" class="btn btn-secondary" onclick="deleteLast()">⌫</button>
+                                    <button type="button" class="btn btn-warning" onclick="appendToDisplay('/')">/</button>
+                                    
+                                    <button type="button" class="btn btn-light" onclick="appendToDisplay('7')">7</button>
+                                    <button type="button" class="btn btn-light" onclick="appendToDisplay('8')">8</button>
+                                    <button type="button" class="btn btn-light" onclick="appendToDisplay('9')">9</button>
+                                    <button type="button" class="btn btn-warning" onclick="appendToDisplay('*')">×</button>
+                                    
+                                    <button type="button" class="btn btn-light" onclick="appendToDisplay('4')">4</button>
+                                    <button type="button" class="btn btn-light" onclick="appendToDisplay('5')">5</button>
+                                    <button type="button" class="btn btn-light" onclick="appendToDisplay('6')">6</button>
+                                    <button type="button" class="btn btn-warning" onclick="appendToDisplay('-')">-</button>
+                                    
+                                    <button type="button" class="btn btn-light" onclick="appendToDisplay('1')">1</button>
+                                    <button type="button" class="btn btn-light" onclick="appendToDisplay('2')">2</button>
+                                    <button type="button" class="btn btn-light" onclick="appendToDisplay('3')">3</button>
+                                    <button type="button" class="btn btn-warning" onclick="appendToDisplay('+')">+</button>
+                                    
+                                    <button type="button" class="btn btn-light" onclick="appendToDisplay('(')">(</button>
+                                    <button type="button" class="btn btn-light" onclick="appendToDisplay('0')">0</button>
+                                    <button type="button" class="btn btn-light" onclick="appendToDisplay(')')">)</button>
+                                    <button type="button" class="btn btn-light" onclick="appendToDisplay('.')">.</button>
+                                    
+                                    <button type="submit" class="btn btn-primary calculate-btn">=</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                @if (User.Identity?.IsAuthenticated == true && Model.History.Any())
+                {
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">Calculation History</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="history-list">
+                                    @foreach (var item in Model.History)
+                                    {
+                                        <div class="history-item mb-2 p-2 border rounded">
+                                            <div class="expression text-muted small">@item.Expression</div>
+                                            <div class="result fw-bold">= @item.Result</div>
+                                            <div class="timestamp text-muted small">@item.CreatedAt.ToString("MM/dd HH:mm")</div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else if (User.Identity?.IsAuthenticated == true)
+                {
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">Calculation History</h6>
+                            </div>
+                            <div class="card-body text-center text-muted">
+                                <p>No calculations yet.</p>
+                                <p class="small">Your calculation history will appear here.</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+        function appendToDisplay(value) {
+            const display = document.getElementById('display');
+            display.value += value;
+        }
+
+        function clearDisplay() {
+            document.getElementById('display').value = '';
+        }
+
+        function clearEntry() {
+            document.getElementById('display').value = '';
+        }
+
+        function deleteLast() {
+            const display = document.getElementById('display');
+            display.value = display.value.slice(0, -1);
+        }
+
+        // Allow keyboard input
+        document.getElementById('display').addEventListener('keypress', function(e) {
+            const allowedChars = '0123456789+-*/.() ';
+            if (!allowedChars.includes(e.key) && e.key !== 'Enter') {
+                e.preventDefault();
+            }
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('calculatorForm').submit();
+            }
+        });
+    </script>
+}
