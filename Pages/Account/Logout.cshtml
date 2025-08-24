@@ -1,0 +1,22 @@
+@page
+@model Calculator.Pages.Account.LogoutModel
+@{
+    ViewData["Title"] = "Log out";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-center">@ViewData["Title"]</h3>
+            </div>
+            <div class="card-body text-center">
+                <p>You have been logged out of the application.</p>
+                <div class="d-grid gap-2">
+                    <a asp-page="/Index" class="btn btn-primary">Go to Calculator</a>
+                    <a asp-page="./Login" class="btn btn-outline-primary">Login Again</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
